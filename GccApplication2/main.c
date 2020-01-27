@@ -42,26 +42,29 @@ void car()
    /* start moving forward*/
    MotorDC_Dir(MOT_1,FORWARD);
    MotorDC_Dir(MOT_2,FORWARD);      
-   uint8_t i =0;
+   uint8_t i =1;
    for(; i<=100;i++)  // step size = 100 / 5 where 100 represents 100 of full speed 5 is the 5 second
    {
       MotorDC_Speed_PollingWithT0(i);  
-      softwareDelayMs(100);       
+      softwareDelayMs(90);       
    }
    /********************************************* Move from speed 100-0 for 5 seconds ************************************/
    //Reinitialize i
    i =100;     
-   for (;i>=0;i--)
+   for (;i>=1;i--)
    {
       MotorDC_Speed_PollingWithT0(i); 
-      softwareDelayMs(100);        
+      softwareDelayMs(90);        
    }   
    MotorDC_Dir(MOT_1,STOP);
    MotorDC_Dir(MOT_2,STOP);
    timer0Stop();
    /********************************************* Rotate 90 degree ******************************************************/
    MotorDC_Dir(MOT_1,FORWARD);
-   softwareDelayMs(100);
+   MotorDC_Dir(MOT_2,BACKWARD);
+   softwareDelayMs(350);
+   MotorDC_Dir(MOT_1,STOP);
+   MotorDC_Dir(MOT_2,STOP);
            
    
 }
@@ -71,11 +74,13 @@ void testPwm()
    while (1)
    {
       uint8_t i =0;
-      for(;i<100;i = i+10)
+      while(i<100)
       {
-         timer0SwPWM(50,200);
-         softwareDelayMs(1000);
-      }      
+         timer0SwPWM(i,1);
+         softwareDelayMs(500);
+         i += 10;
+      }
+         
    }   
 }
 

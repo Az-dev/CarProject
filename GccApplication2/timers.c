@@ -144,14 +144,9 @@ void timer0DelayMs(uint16_t u16_delay_in_ms)
  */
 void timer0SwPWM(uint8_t u8_dutyCycle,uint8_t u8_frequency)
 {
-   uint16_t u16_prescaled_clk = CPU_F / (2*1024);
-   uint16_t u16_doubled_frequency = u8_frequency * 2;
-   
-   uint8_t  u8_frequency_ticks =  u16_prescaled_clk / u16_doubled_frequency;
-   uint16_t u16_duty_ticks = (u8_dutyCycle * u8_frequency_ticks) / 100;
-   gu8_preloader = (255-(u8_frequency_ticks-1)); 
-   //gu8_preloader++;
-       
+   uint32_t u8_frequency_ticks = (((CPU_F / 1000) / 64) / u8_frequency);  
+   uint32_t u16_duty_ticks = ((100-u8_dutyCycle) * (uint8_t)u8_frequency_ticks) / 100;
+   gu8_preloader = (255-(u8_frequency_ticks-1));
    /* configure output pins direction and data*/
    gpioPinDirection(GPIOD,(BIT4|BIT5),HIGH);
    gpioPinWrite(GPIOD,(BIT4|BIT5),LOW); 
@@ -159,7 +154,7 @@ void timer0SwPWM(uint8_t u8_dutyCycle,uint8_t u8_frequency)
    sei();                              /* enable global mask */
    TIMSK |= timer0.en_interruptMask;   /*enable T0_INTERRUPT_CMP mask*/           
    /* initialize counter */
-   timer0Init(T0_NORMAL_MODE,T0_OC0_CLEAR,T0_PRESCALER_1024,gu8_preloader,(gu8_preloader + (u8_frequency_ticks - u16_duty_ticks)),(T0_INTERRUPT_CMP|T0_INTERRUPT_NORMAL));
+   timer0Init(T0_NORMAL_MODE,T0_OC0_CLEAR,T0_PRESCALER_1024,gu8_preloader,(gu8_preloader + u16_duty_ticks),(T0_INTERRUPT_CMP|T0_INTERRUPT_NORMAL));
    
    /*initialize TCNT0*/
    TCNT0 = timer0.u8_initialValue;

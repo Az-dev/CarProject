@@ -106,5 +106,5 @@ void MotorDC_Dir(En_motorType_t en_motor_number, En_motorDir_t en_motor_dir)
 void MotorDC_Speed_PollingWithT0(uint8_t u8_motor_speed)
 {
    
-   timer0SwPWM(u8_motor_speed,250); // frequency is 250
+   timer0SwPWM(u8_motor_speed,1); // frequency is 250
 }
