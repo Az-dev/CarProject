@@ -16,8 +16,9 @@
 #include "SwICU.h"
 #include "ultraSonicConfig.h"
 
-volatile uint8_t * gu_sw_icu = NULL;
-volatile uint8_t sw_icu_reset = LOW;
+
+volatile uint8_t gu_distance_read = LOW;
+volatile uint8_t gu_sw_icu = 0;
 
 
 
@@ -28,6 +29,7 @@ void test(void);
 void testPwm(void);
 void car(void);
 void swIcuTest(void);
+void swIcuDistanceMeasurement(void);
 
 
 
@@ -41,60 +43,105 @@ int main(void)
 	//test(); 
    /*testPwm();*/
    /*car();*/
-   swIcuTest();
+   //swIcuTest();
+   swIcuDistanceMeasurement();   
 }
 
-void swIcuTest()
+void swIcuDistanceMeasurement()
 {
-   
-   /************************************** Intialization *****************************************/
-   /*Initialize SWI_CU*/ 
-   SwICU_Init(SwICU_EdgeRisiging);  
-   /*initialize led*/
+   /*------------------------------------------------------ Initialization --------------------------------------------------*/   
+   /* Initialize Timer2 : Its counts will be used for distance measurement */
+   timer2Init(T2_NORMAL_MODE,T2_OC2_CLEAR,T2_PRESCALER_64,0,0,0,T2_INTERRUPT_NORMAL);
+   /* Initialize UltraSonicSensor */
+   //gpioPinDirection(ULTRA_EN_GPIO,ULTRA_ENABLE_BIT,OUTPUT); /* Triggering pin */
+   gpioPinDirection(ULTRA_OUT_GPIO,ULTRA_OUT_BIT,INPUT);    /* Echo pin */
+   PORTB_DIR |= BIT3;
+   /* Initialize LEDs : will be used to as an output for distance measurement value */
    Led_Init(LED_0);
    Led_Init(LED_1);
    Led_Init(LED_2);
    Led_Init(LED_3);
-   /*Initialize triggerPins*/
-   gpioPinDirection(ULTRA_EN_GPIO,ULTRA_ENABLE_BIT,OUTPUT); /*triggering pin*/
-   gpioPinDirection(ULTRA_OUT_GPIO,ULTRA_OUT_BIT,INPUT);
-   /**************************************** Interrupts enable **************************************/
-   /*set sei()*/
-   sei();
+   /* Set Global Interrupt */
+   sei(); 
+   /**********/
+   /*Disable INT2*/
+   GICR &= ~(BIT5);   
+   /*Set ISC2 to (1) : that will fire INT2 on rising edge */
+   MCUCSR |= BIT6; 
+   /*Reset INTF2 flag bit by setting 1*/
+   GIFR |= BIT5; 
    /*Enable INT2*/
-   SwICU_Enable();
-   /************************************** Start timer and trigger ICU *************************************/
-   /*trigger SW_ICU*/
-   /*provide a 10-micro seconds pulse*/
+   GICR |= (BIT5);   
+   /*---------------------------------------------------- Trigger the Sensor -----------------------------------------------------*/
+    
    gpioPinWrite(ULTRA_EN_GPIO,ULTRA_ENABLE_BIT,HIGH);
-   //_delay_us(50);
+   //PORTB_DATA = 0x08;   
    timer0DelayMs(1);   
    gpioPinWrite(ULTRA_EN_GPIO,ULTRA_ENABLE_BIT,LOW);
-   /*Start Input Capture*/
-   //SwICU_Start();         
-   while (1)
-   {           
-      if(sw_icu_reset == HIGH)
-      {
-         /*calculate distance and turn led on*/
-         //uint8_t distance = (68*(*(gu_sw_icu)))/1000;
-         //(((68*(*(gu_sw_icu)))/1000)<<4)
-         //PORTB
-         gpioPortWrite(GPIOB,(68*(*gu_sw_icu)/1000)<<4);
-         /*Delay*/
-         timer0DelayMs(1000);
-         /*trigger SW_ICU*/
-         /*provide a 10-micro seconds pulse*/
+   //PORTB_DATA = 0x00;   
+   
+   
+      
+   while(1)
+   {       
+      if(gu_distance_read == HIGH)
+      {   
+            
+         gpioPortWrite(GPIOB,((68*gu_sw_icu)/1000)<<4);
+         timer0DelayMs(100);  
+         gu_distance_read = LOW;
          gpioPinWrite(ULTRA_EN_GPIO,ULTRA_ENABLE_BIT,HIGH);
+         //PORTB_DATA = 0x08;
          timer0DelayMs(1);
          gpioPinWrite(ULTRA_EN_GPIO,ULTRA_ENABLE_BIT,LOW);
-         /*Start Input Capture again*/
-         SwICU_Start();         
-         /*set reset flag to low*/
-         sw_icu_reset = LOW;    
-      }                  
-   }  
+         //PORTB_DATA = 0x00;             
+      }     
+   }
+   
 }
+
+/************ INT2 ISR ***********/
+ISR_INT2()
+{
+   if(MCUCSR & BIT6)  /* if ISC2 is set --> Rising edge */
+   {
+      /*start timer2*/
+      timer2Start();
+      /*change edge*/
+      /**********/
+      /*Disable INT2*/
+      GICR &= ~(BIT5);
+      /*Set ISC2 to (0) : that will fire INT2 on falling edge */
+      MCUCSR &= (~BIT6);      
+      /*Reset INTF2 flag bit by setting 1*/
+      GIFR |= BIT5;
+      /*Enable INT2*/
+      GICR |= (BIT5);            
+   }
+   else if(!(MCUCSR & BIT6)) /* if ISC2 is set to (0) --> Falling Edge */ /* assert its value !!!??*/
+   {
+      /*stop timer counter*/
+      timer2Stop();
+      /*read TCNT2*/
+      gu_sw_icu = timer2Read();
+      /*Reset TCNT2*/
+      timer2Set(0);
+      /*change edge*/
+      /**********/
+      /*Disable INT2*/
+      GICR &= ~(BIT5);
+      /*Set ISC2 to (1) : that will fire INT2 on rising edge */
+      MCUCSR |= (BIT6);      
+      /*Reset INTF2 flag bit by setting 1*/
+      GIFR |= BIT5;
+      /*Enable INT2*/
+      GICR |= (BIT5);
+      /*set read flag*/
+      gu_distance_read = HIGH;
+   }    
+   
+}
+
 
 void car()
 {

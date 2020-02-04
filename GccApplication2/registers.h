@@ -15,7 +15,7 @@
 #define MCUCR		
 #define MCUCSR *((reg_type8_t) 0x54)		
 #define GICR   *((reg_type8_t) 0x5B)		 
-#define GIFR		
+#define GIFR   *((reg_type8_t) 0x5A)		
 
 /*
  * PORTx registers

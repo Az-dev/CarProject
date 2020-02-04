@@ -129,31 +129,7 @@ void SwICU_Start(void)
 
 
 /**************************** INT2 Control *******************************/
-ISR_INT2()
-{
-   if(SwICU_GetCfgEdge() == SwICU_EdgeFalling)
-   {   
-      /* Stop SwICU */
-      SwICU_Stop();               
-      /* Read SW_ICU*/
-      SwICU_Read(gu_sw_icu);      
-      /*set configuration edge*/
-      SwICU_SetCfgEdge(SwICU_EdgeRisiging);
-      /**Debuger**/
-      gpioPortWrite(GPIOB,0xf0);
-      while(1){}
-      /****/ 
-      /*set reset flag*/
-      sw_icu_reset = HIGH;                        
-   }
-   else if(SwICU_GetCfgEdge() == SwICU_EdgeRisiging)
-   {
-      /* Stop SwICU */
-      SwICU_Start();
-      /*set configuration edge*/
-      SwICU_SetCfgEdge(SwICU_EdgeFalling);                   
-   } 
-}
+
 
 #endif /* SWICU_H_ */
 
