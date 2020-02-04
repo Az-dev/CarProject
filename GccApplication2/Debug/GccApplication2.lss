@@ -1074,7 +1074,7 @@ ISR_INT2()
       SwICU_Start();
  62c:	0e 94 dd 02 	call	0x5ba	; 0x5ba <SwICU_Start>
       /*set configuration edge*/
-      SwICU_SetCfgEdge(SwICU_EdgeFalling);               
+      SwICU_SetCfgEdge(SwICU_EdgeFalling);                   
  630:	82 e0       	ldi	r24, 0x02	; 2
  632:	0e 94 8a 02 	call	0x514	; 0x514 <SwICU_SetCfgEdge>
    } 

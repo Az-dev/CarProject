@@ -151,7 +151,7 @@ ISR_INT2()
       /* Stop SwICU */
       SwICU_Start();
       /*set configuration edge*/
-      SwICU_SetCfgEdge(SwICU_EdgeFalling);               
+      SwICU_SetCfgEdge(SwICU_EdgeFalling);                   
    } 
 }
 
