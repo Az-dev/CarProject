@@ -6,13 +6,17 @@ typedef struct gstr_timerInit_t{
     uint8_t en_prescal;
     uint8_t u8_initialValue;
     uint8_t u8_outputCompare;
+    uint8_t u8_assynchronous;
     uint8_t en_interruptMask;    
 }gstr_timerInit_t; 
 
 static gstr_timerInit_t timer0;
+static gstr_timerInit_t timer2;
+
 volatile uint32_t gu32_sw_counter = 0;
 //volatile uint8_t gu8_duty_ticks = 0;
 volatile uint8_t gu8_preloader = 0;
+volatile uint16_t gu16_t2_sw_counter  = 0;
 
 /**
  * Description:
@@ -166,21 +170,156 @@ void timer0SwPWM(uint8_t u8_dutyCycle,uint8_t u8_frequency)
    timer0Start();       
 }
 
-/************************************************ Timers ISRs **********************************************************/
-/***************  T0 ISRs *************/
-ISR_TIMER0_OVF()
-{  
-   /*reset pins*/ 
-   gpioPinWrite(GPIOD,(BIT4|BIT5),LOW);
-   /*reload TCNT0*/
-   TCNT0 = gu8_preloader;  //debug point  
+
+/*===========================Timer2 Control===============================*/
+/**
+ * Description:
+ * @param control
+ * @param initialValue
+ * @param outputCompare
+ * @param interruptMask
+ */
+void timer2Init(En_timer2Mode_t en_mode,En_timer2OC_t en_OC,En_timer2perscaler_t en_prescal, uint8_t u8_initialValue, uint8_t u8_outputCompare, uint8_t u8_assynchronous, En_timer2Interrupt_t en_interruptMask)
+{
+   /* Initialize TCCR0 */
+   timer2.en_mode = en_mode;
+   /* set en_OC0*/
+   timer2.en_OC0 = en_OC;
+   /* Set prescaler */
+   timer2.en_prescal = en_prescal;
+   /* set u8_initialValue */
+   timer2.u8_initialValue = u8_initialValue;
+   /*set u8_outputCompare */
+   timer2.u8_outputCompare = u8_outputCompare;
+   /*set assynchronous*/
+   timer2.u8_assynchronous = u8_assynchronous;
+   /* set en_interruptMask */
+   timer2.en_interruptMask = en_interruptMask;   
+}
+/**
+ * Description:
+ * @param value
+ */
+void timer2Set(uint8_t u8_a_value)
+{
+   switch(timer0.en_mode)
+   {
+      case T2_NORMAL_MODE:
+         //timer is in normal mode
+         TCNT2 |= u8_a_value;
+      break;
+      case T2_COMP_MODE:
+         //timer is in CTC mode
+         TCNT2 = 0x00;
+         OCR2 |= u8_a_value;
+      break;
+   }
 }
 
-ISR_TIMER0_COMP()
+/**
+ * Description:
+ * @return
+ */
+uint8_t timer2Read(void)
 {
-   /*set pins*/
-   gpioPinWrite(GPIOD,(BIT4|BIT5),HIGH);      
+   return TCNT2;
 }
+
+/**
+ * Description:
+ */
+void timer2Start(void)
+{
+   TCCR2 |= (timer2.en_mode | timer2.en_prescal);
+}
+
+/**
+ * Description:
+ */
+void timer2Stop(void)
+{
+   TCCR2 &= T2_NO_CLOCK;   
+}
+
+/**
+ * Description:
+ * @param delay
+ */
+void timer2DelayMs(uint16_t u16_delay_in_ms)
+{
+    uint32_t ticks_number = 0;
+	 uint8_t t2_tov_initial = 0;  /* overflow initial value*/
+    uint8_t t2_oc_initial = 0;   /* output compare initial value*/
+    
+    /* Initialize the timer*/
+    timer2Init(T2_NORMAL_MODE,T2_OC2_CLEAR,T2_PRESCALER_NO,0,0,0,T2_INTERRUPT_NORMAL);   
+
+    /* calculate tick number in Milli seconds */    
+    ticks_number = (CPU_F / (timer2.en_prescal * MILLI_SECONDS)) * u16_delay_in_ms;
+    /* calculate software_counter value in Milli seconds */
+    gu16_t2_sw_counter   = ticks_number / T2_OV_VAL;
+    if((ticks_number % T2_OV_VAL)) /* if (ticks_number % T2_OV_VAL) != 0*/
+    {
+         /*increment gu16_sw_counter*/
+         gu16_t2_sw_counter++;
+         /* set t2_tov_initial value */
+         t2_tov_initial = (T2_OV_VAL - (uint8_t)(ticks_number % T2_OV_VAL));
+         /* set t2_oc_initial*/
+         t2_oc_initial = (uint8_t)(ticks_number % T2_OV_VAL); 
+    }else
+    {
+       /* set t2_tov_initial value */
+       t2_tov_initial = 0;
+       /* set t2_oc_initial*/
+       t2_oc_initial = T2_OCR_MAX;  
+    } 
+    /********************************************** NORMAL MODE CONTROL **********************************************/
+    /* set timer0 : set TOV initial value*/
+    timer2Set(t2_tov_initial);
+    switch(timer2.en_interruptMask)
+    {
+       case T2_INTERRUPT_NORMAL:
+       /* set Global interrupt bit*/
+       sei();
+       /* set TOIE0 */
+       TIMSK |= timer2.en_interruptMask;
+       /* start the timer*/
+       timer2Start();
+       /* wait for the timer to finish*/
+       while(1)
+       {
+          if(gu16_t2_sw_counter == 0) break;
+       }
+       /* stop the timer*/
+       timer2Stop();
+       /* reset TOIE0 */
+       TIMSK &= ~(timer2.en_interruptMask);
+       /* clear Global interrupt bit*/
+       cli();
+       break;
+   } 
+}
+
+/************************************************ Timers ISRs Control **********************************************************/
+ISR_TIMER0_OVF(){
+   /*reset pins*/
+   gpioPinWrite(GPIOD,(BIT4|BIT5),LOW);
+   /*reload TCNT0*/
+   TCNT0 = gu8_preloader;  //debug point
+}
+
+ISR_TIMER0_COMP(){
+   /*set pins*/
+   gpioPinWrite(GPIOD,(BIT4|BIT5),HIGH);
+}
+
+ISR_TIMER2_OVF(){
+   /* decrement global software counter*/
+   gu16_t2_sw_counter-=1;
+}
+
+
+
 
 
 

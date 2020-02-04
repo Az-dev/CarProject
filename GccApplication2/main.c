@@ -13,6 +13,13 @@
 #include "sevenSeg.h"
 #include "timers.h"
 #include "dcMotor.h"
+#include "SwICU.h"
+#include "ultraSonicConfig.h"
+
+volatile uint8_t * gu_sw_icu = NULL;
+volatile uint8_t sw_icu_reset = LOW;
+
+
 
 void gpioReq7(void);
 void gpioReq8(void);
@@ -20,6 +27,10 @@ void gpioReq9(void);
 void test(void);
 void testPwm(void);
 void car(void);
+void swIcuTest(void);
+
+
+
 
 
 int main(void)
@@ -27,9 +38,62 @@ int main(void)
 	/* gpioReq7();*/ 
 	/* gpioReq8(); */
 	/* gpioReq9(); */
-	/*test();*/ 
-   //testPwm();
-   car();
+	//test(); 
+   /*testPwm();*/
+   /*car();*/
+   swIcuTest();
+}
+
+void swIcuTest()
+{
+   
+   /************************************** Intialization *****************************************/
+   /*Initialize SWI_CU*/ 
+   SwICU_Init(SwICU_EdgeRisiging);  
+   /*initialize led*/
+   Led_Init(LED_0);
+   Led_Init(LED_1);
+   Led_Init(LED_2);
+   Led_Init(LED_3);
+   /*Initialize triggerPins*/
+   gpioPinDirection(ULTRA_EN_GPIO,ULTRA_ENABLE_BIT,OUTPUT); /*triggering pin*/
+   gpioPinDirection(ULTRA_OUT_GPIO,ULTRA_OUT_BIT,INPUT);
+   /**************************************** Interrupts enable **************************************/
+   /*set sei()*/
+   sei();
+   /*Enable INT2*/
+   SwICU_Enable();
+   /************************************** Start timer and trigger ICU *************************************/
+   /*trigger SW_ICU*/
+   /*provide a 10-micro seconds pulse*/
+   gpioPinWrite(ULTRA_EN_GPIO,ULTRA_ENABLE_BIT,HIGH);
+   //_delay_us(50);
+   timer0DelayMs(1);   
+   gpioPinWrite(ULTRA_EN_GPIO,ULTRA_ENABLE_BIT,LOW);
+   /*Start Input Capture*/
+   //SwICU_Start();         
+   while (1)
+   {           
+      if(sw_icu_reset == HIGH)
+      {
+         /*calculate distance and turn led on*/
+         //uint8_t distance = (68*(*(gu_sw_icu)))/1000;
+         //(((68*(*(gu_sw_icu)))/1000)<<4)
+         //PORTB
+         gpioPortWrite(GPIOB,(68*(*gu_sw_icu)/1000)<<4);
+         /*Delay*/
+         timer0DelayMs(1000);
+         /*trigger SW_ICU*/
+         /*provide a 10-micro seconds pulse*/
+         gpioPinWrite(ULTRA_EN_GPIO,ULTRA_ENABLE_BIT,HIGH);
+         timer0DelayMs(1);
+         gpioPinWrite(ULTRA_EN_GPIO,ULTRA_ENABLE_BIT,LOW);
+         /*Start Input Capture again*/
+         SwICU_Start();         
+         /*set reset flag to low*/
+         sw_icu_reset = LOW;    
+      }                  
+   }  
 }
 
 void car()
@@ -87,14 +151,30 @@ void testPwm()
 void test(void)
 {
 	/*initialize led*/
-	Led_Init(LED_1);   
+	Led_Init(LED_0);
+   Led_Init(LED_1);
+   Led_Init(LED_2);
+   Led_Init(LED_3);   
 	while(1)
 	{
 		/*Go state*/
-		Led_On(LED_1);
-		timer0DelayMs(1000); //delay 1000 ms
-		Led_Off(LED_1);	
-		timer0DelayMs(1000); //delay 1000 ms	
+		Led_On(LED_0);
+		softwareDelayMs(100); //delay 1000 ms
+		Led_Off(LED_0);	
+		softwareDelayMs(100); //delay 1000 ms	
+      Led_On(LED_1);
+      softwareDelayMs(100); //delay 1000 ms
+      Led_Off(LED_1);
+      softwareDelayMs(100); //delay 1000 ms
+      Led_On(LED_2);
+      softwareDelayMs(100); //delay 1000 ms
+      Led_Off(LED_2);
+      softwareDelayMs(100); //delay 1000 ms
+      Led_On(LED_3);
+      softwareDelayMs(100); //delay 1000 ms
+      Led_Off(LED_3);
+      softwareDelayMs(100); //delay 1000 ms
+      
 	}
 }
 

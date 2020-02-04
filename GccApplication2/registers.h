@@ -13,8 +13,8 @@
  * General Registers
  */
 #define MCUCR		
-#define MCUCSR		
-#define GICR		
+#define MCUCSR *((reg_type8_t) 0x54)		
+#define GICR   *((reg_type8_t) 0x5B)		 
 #define GIFR		
 
 /*

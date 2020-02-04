@@ -207,10 +207,19 @@
     <Compile Include="std_types.h">
       <SubType>compile</SubType>
     </Compile>
+    <Compile Include="SwICU.c">
+      <SubType>compile</SubType>
+    </Compile>
+    <Compile Include="SwICU.h">
+      <SubType>compile</SubType>
+    </Compile>
     <Compile Include="timers.c">
       <SubType>compile</SubType>
     </Compile>
     <Compile Include="timers.h">
+      <SubType>compile</SubType>
+    </Compile>
+    <Compile Include="ultraSonicConfig.h">
       <SubType>compile</SubType>
     </Compile>
   </ItemGroup>

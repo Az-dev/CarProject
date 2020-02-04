@@ -15,8 +15,10 @@
 #define CPU_F 16000000
 #define MILLI_SECONDS 1000
 #define MICRO_SECONDS 1000000
+#define T2_OV_VAL 256
 #define T0_OV_VAL 256 		/* timer0 over flow value*/
 #define T0_OCR_MAX 255      /* maximum value of OCR */
+#define T2_OCR_MAX 255      /* maximum value of OCR */
 #define KILO_HZ 1000
 #define MEGA_HZ 1000000
 #define PERCENT 100

@@ -16,5 +16,7 @@ sevenSeg.c
 
 softwareDelay.c
 
+SwICU.c
+
 timers.c
 
