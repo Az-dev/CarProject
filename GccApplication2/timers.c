@@ -18,6 +18,63 @@ volatile uint32_t gu32_sw_counter = 0;
 volatile uint8_t gu8_preloader = 0;
 volatile uint16_t gu16_t2_sw_counter  = 0;
 
+volatile uint16_t gu16_t1_en_prescal; /* Timer 1 prescaler */
+
+/*======================================================= Timer 1 Control ==================================================*/
+/**
+ * Description:
+ * @param controlA
+ * @param controlB
+ * @param initialValue
+ * @param outputCompare
+ * @param interruptMask
+ */
+void timer1Init(En_timer1Mode_t en_mode,En_timer1OC_t en_OC,En_timer1perscaler_t en_prescal, uint16_t u16_initialValue, uint16_t u16_outputCompareA, uint16_t u16_outputCompareB,uint16_t u16_inputCapture, En_timer1Interrupt_t en_interruptMask)
+{
+   TCCR1 |= en_mode; 
+   TCCR1 |= 0xA000;  /*COM1A1/COM1B1 = 1 & COM1A0/COM1B0 = 0  -----> Clear OC1A/OC1B on compare match when up-counting. Set OC1A/OC1B on compare match when down counting.*/
+   TCNT1 |= u16_initialValue;
+   OCR1A |= u16_outputCompareA;
+   OCR1B |= u16_outputCompareB;
+   ICR1  |= u16_inputCapture;
+   gu16_t1_en_prescal = en_prescal;  
+}
+
+/**
+ * Description:
+ */
+void timer1Start(void)
+{
+   TCCR1B |= gu16_t1_en_prescal;
+}
+
+/**
+ * Description:
+ */
+void timer1Stop(void)
+{
+   TCCR1B = T1_NO_CLOCK; 
+}
+
+/**
+ * Description:
+ * @param dutyCycle
+ */
+void timer1HwPWM(uint8_t u8_dutyCycle)
+{  
+   /* configure output pins direction and data*/
+   gpioPinDirection(GPIOD,(BIT2|BIT3),HIGH);
+   gpioPinWrite(GPIOD,(BIT4|BIT5),LOW); 
+   /* Calculate initial value for OCR1A and OCR1B */
+   uint32_t u32_ocr_initial = u8_dutyCycle * (32000 / 100);   
+   /*initialize timer1 : to generate a wave of 250 Hz of frequency , so we initialize TCNT1 to 64000 -which is equal to (65537 - 1537)-*/
+   timer1Init(T1_COMP_MODE_ICR1_BOTTOM,0xA000,T1_PRESCALER_NO,0,(uint16_t)u32_ocr_initial,(uint16_t)u32_ocr_initial,32000,T1_POLLING);
+   //timer1Init(T1_COMP_MODE_ICR1_TOP,(T1_OC1A_SET|T1_OC1B_SET),T1_PRESCALER_NO,0,1000,1000,1,T1_POLLING);
+   /*start timer*/
+   timer1Start();
+}
+
+/*======================================================= Timer 0 Control ==================================================*/
 /**
  * Description:
  * @param control
@@ -117,7 +174,7 @@ void timer0DelayMs(uint16_t u16_delay_in_ms)
        /* set t0_oc_initial*/
        t0_oc_initial = T0_OCR_MAX;  
     }    
-    /********************************************** T0: OUTPUT COMPARE MODE & Polling CONTROL **********************************************/
+    /***************** T0: OUTPUT COMPARE MODE & Polling CONTROL **************************/
     /*set timer0 : set OC initial value*/
     timer0Set(t0_oc_initial);    
     /* start the timer*/
@@ -158,8 +215,7 @@ void timer0SwPWM(uint8_t u8_dutyCycle,uint8_t u8_frequency)
    sei();                              /* enable global mask */
    TIMSK |= timer0.en_interruptMask;   /*enable T0_INTERRUPT_CMP mask*/           
    /* initialize counter */
-   timer0Init(T0_NORMAL_MODE,T0_OC0_CLEAR,T0_PRESCALER_1024,gu8_preloader,(gu8_preloader + u16_duty_ticks),(T0_INTERRUPT_CMP|T0_INTERRUPT_NORMAL));
-   
+   timer0Init(T0_NORMAL_MODE,T0_OC0_CLEAR,T0_PRESCALER_1024,gu8_preloader,(gu8_preloader + u16_duty_ticks),(T0_INTERRUPT_CMP|T0_INTERRUPT_NORMAL));   
    /*initialize TCNT0*/
    TCNT0 = timer0.u8_initialValue;
    /*initialize OCR0*/
@@ -171,7 +227,7 @@ void timer0SwPWM(uint8_t u8_dutyCycle,uint8_t u8_frequency)
 }
 
 
-/*===========================Timer2 Control===============================*/
+/*========================================================== Timer2 Control ================================================*/
 /**
  * Description:
  * @param control

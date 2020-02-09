@@ -108,3 +108,13 @@ void MotorDC_Speed_PollingWithT0(uint8_t u8_motor_speed)
    
    timer0SwPWM(u8_motor_speed,1); // frequency is 250
 }
+
+/**
+ * Description: set the port value (which is PORT register)
+ * @param 
+ */
+void MotorDC_Speed_HwPWM(uint8_t u8_motor_speed)
+{
+   
+   timer1HwPWM(u8_motor_speed); // frequency is 250
+}

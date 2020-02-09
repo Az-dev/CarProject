@@ -28,12 +28,8 @@ void gpioReq9(void);
 void test(void);
 void testPwm(void);
 void car(void);
-void swIcuTest(void);
 void swIcuDistanceMeasurement(void);
-
-
-
-
+void carObtsacleDetection(void);
 
 int main(void)
 { 
@@ -42,9 +38,9 @@ int main(void)
 	/* gpioReq9(); */
 	//test(); 
    /*testPwm();*/
-   /*car();*/
-   //swIcuTest();
-   swIcuDistanceMeasurement();   
+   //car();   
+   //swIcuDistanceMeasurement();
+   carObtsacleDetection();   
 }
 
 void swIcuDistanceMeasurement()
@@ -72,29 +68,20 @@ void swIcuDistanceMeasurement()
    GIFR |= BIT5; 
    /*Enable INT2*/
    GICR |= (BIT5);   
-   /*---------------------------------------------------- Trigger the Sensor -----------------------------------------------------*/
-    
-   gpioPinWrite(ULTRA_EN_GPIO,ULTRA_ENABLE_BIT,HIGH);
-   //PORTB_DATA = 0x08;   
+   /*---------------------------------------------------- Trigger the Sensor -----------------------------------------------------*/    
+   gpioPinWrite(ULTRA_EN_GPIO,ULTRA_ENABLE_BIT,HIGH);     
    timer0DelayMs(1);   
-   gpioPinWrite(ULTRA_EN_GPIO,ULTRA_ENABLE_BIT,LOW);
-   //PORTB_DATA = 0x00;   
-   
-   
-      
+   gpioPinWrite(ULTRA_EN_GPIO,ULTRA_ENABLE_BIT,LOW);      
    while(1)
    {       
       if(gu_distance_read == HIGH)
-      {   
-            
+      {               
          gpioPortWrite(GPIOB,((68*gu_sw_icu)/1000)<<4);
          timer0DelayMs(100);  
          gu_distance_read = LOW;
-         gpioPinWrite(ULTRA_EN_GPIO,ULTRA_ENABLE_BIT,HIGH);
-         //PORTB_DATA = 0x08;
+         gpioPinWrite(ULTRA_EN_GPIO,ULTRA_ENABLE_BIT,HIGH);         
          timer0DelayMs(1);
-         gpioPinWrite(ULTRA_EN_GPIO,ULTRA_ENABLE_BIT,LOW);
-         //PORTB_DATA = 0x00;             
+         gpioPinWrite(ULTRA_EN_GPIO,ULTRA_ENABLE_BIT,LOW);                     
       }     
    }
    
@@ -142,6 +129,67 @@ ISR_INT2()
    
 }
 
+void carObtsacleDetection()
+{
+   /*------------------------------------------------------ Initialization --------------------------------------------------*/
+   /* Initialize Timer2 : Its counts will be used for distance measurement */
+   timer2Init(T2_NORMAL_MODE,T2_OC2_CLEAR,T2_PRESCALER_64,0,0,0,T2_INTERRUPT_NORMAL);
+   /*Initialize motors*/
+   MotorDC_Init(MOT_1);
+   MotorDC_Init(MOT_2);
+   /* Initialize UltraSonicSensor */
+   //gpioPinDirection(ULTRA_EN_GPIO,ULTRA_ENABLE_BIT,OUTPUT); /* Triggering pin */
+   gpioPinDirection(ULTRA_OUT_GPIO,ULTRA_OUT_BIT,INPUT);    /* Echo pin */
+   PORTB_DIR |= BIT3;
+   /* Initialize LEDs : will be used to as an output for distance measurement value */
+   Led_Init(LED_0);
+   Led_Init(LED_1);
+   Led_Init(LED_2);
+   Led_Init(LED_3);
+   /* Set Global Interrupt */
+   sei();
+   /**********/
+   /*Disable INT2*/
+   GICR &= ~(BIT5);
+   /*Set ISC2 to (1) : that will fire INT2 on rising edge */
+   MCUCSR |= BIT6;
+   /*Reset INTF2 flag bit by setting 1*/
+   GIFR |= BIT5;
+   /*Enable INT2*/
+   GICR |= (BIT5);
+   /*---------------------------------------------------- Trigger the Sensor -----------------------------------------------------*/
+   gpioPinWrite(ULTRA_EN_GPIO,ULTRA_ENABLE_BIT,HIGH);
+   timer0DelayMs(1);
+   gpioPinWrite(ULTRA_EN_GPIO,ULTRA_ENABLE_BIT,LOW);
+   while(1)
+   {
+      if(gu_distance_read == HIGH)
+      {
+         gpioPortWrite(GPIOB,((68*gu_sw_icu)/1000)<<4);
+         timer0DelayMs(100);
+         gu_distance_read = LOW;
+         gpioPinWrite(ULTRA_EN_GPIO,ULTRA_ENABLE_BIT,HIGH);
+         timer0DelayMs(1);
+         gpioPinWrite(ULTRA_EN_GPIO,ULTRA_ENABLE_BIT,LOW);
+         if(((68*gu_sw_icu)/1000) > 5)
+         {
+            /* start moving forward*/
+            MotorDC_Dir(MOT_1,FORWARD);
+            MotorDC_Dir(MOT_2,FORWARD);
+            MotorDC_Speed_HwPWM(70);
+            softwareDelayMs(300);
+         }else{
+            MotorDC_Dir(MOT_1,STOP);
+            MotorDC_Dir(MOT_2,STOP);
+            timer1Stop();
+         }
+         
+      }
+      
+      
+   }         
+}
+
 
 void car()
 {
@@ -176,8 +224,6 @@ void car()
    softwareDelayMs(350);
    MotorDC_Dir(MOT_1,STOP);
    MotorDC_Dir(MOT_2,STOP);
-           
-   
 }
 
 void testPwm()

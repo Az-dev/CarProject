@@ -59,7 +59,7 @@ typedef enum En_timer0Interrupt_t{
 
 // for timer 1
 typedef enum En_timer1Mode_t{
-	T1_NORMAL_MODE=0x0000,T1_COMP_MODE_OCR1A_TOP=0x0008, T1_COMP_MODE_ICR1_TOP = 0x0018
+	T1_NORMAL_MODE=0x0000,T1_COMP_MODE_OCR1A_TOP=0x0008, T1_COMP_MODE_ICR1_TOP = 0x0018 , T1_FAST_PWM_NON_OCR1A = 0X0318 ,T1_COMP_MODE_ICR1_BOTTOM = 0x0010
 
 }En_timer1Mode_t;
 typedef enum En_timer1OC_t{
@@ -149,14 +149,6 @@ void timer0DelayUs(uint32_t u32_delay_in_us);
  */
 void timer0SwPWM(uint8_t u8_dutyCycle,uint8_t u8_frequency);
 
-
-
-
-
-
-
-
-
 /*===========================Timer1 Control===============================*/
 /**
  * Description:
@@ -207,9 +199,11 @@ void timer1DelayUs(uint32_t u32_delay_in_us);
  */
 void timer1SwPWM(uint8_t u8_dutyCycle,uint8_t u8_frequency);
 
-
-
-
+/**
+ * Description:
+ * @param dutyCycle
+ */
+void timer1HwPWM(uint8_t u8_dutyCycle);
 
 /*===========================Timer2 Control===============================*/
 /**
