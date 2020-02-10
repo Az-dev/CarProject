@@ -15,11 +15,14 @@
 #include "dcMotor.h"
 #include "SwICU.h"
 #include "ultraSonicConfig.h"
+#include "Usart/usart.h"
 
 
 volatile uint8_t gu_distance_read = LOW;
 volatile uint8_t gu_sw_icu = 0;
 
+uint8_t test_c;
+volatile uint8_t * c = &test_c;
 
 
 void gpioReq7(void);
@@ -30,6 +33,8 @@ void testPwm(void);
 void car(void);
 void swIcuDistanceMeasurement(void);
 void carObtsacleDetection(void);
+void usartTest(void);
+
 
 int main(void)
 { 
@@ -40,8 +45,25 @@ int main(void)
    /*testPwm();*/
    //car();   
    //swIcuDistanceMeasurement();
-   carObtsacleDetection();   
+   //carObtsacleDetection();
+   
+   UsartRx(); 
+   usartTest(); 
+   gpioPortDirection(GPIOB,HIGH);    
+   while(1)
+   {
+      gpioPortWrite(GPIOB,*c);      
+      softwareDelayMs(1000); 
+   }
+   
 }
+
+void usartTest()
+{
+   sei();
+   Usart_Init();
+}
+
 
 void swIcuDistanceMeasurement()
 {

@@ -23,3 +23,13 @@ void __vector_5(void)
 #define ISR_INT2()\
 void __vector_3(void) __attribute__ ((interrupt));\
 void __vector_3(void)
+
+/*ISR_USART_RX_COMPLETE*/
+#define ISR_USART_RX()\
+void __vector_13(void) __attribute__ ((interrupt));\
+void __vector_13(void)
+
+/*ISR_USART_TX_COMPLETE*/
+#define ISR_USART_TX()\
+void __vector_15(void) __attribute__ ((interrupt));\
+void __vector_15(void)

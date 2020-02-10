@@ -91,19 +91,12 @@
 /*
 *  USART Registers
 */	
-#define  UDR      *((reg_type16_t) 0x2C)
+#define  UDR      *((reg_type8_t) 0x2C)
 #define  UCSRA    *((reg_type8_t) 0x2B)
 #define  UCSRB    *((reg_type8_t) 0x2A)
 #define  UCSRC    *((reg_type8_t) 0x40)   //!!
 #define  UBRRH    *((reg_type8_t) 0x40)   //!!
 #define  UBRRL    *((reg_type8_t) 0x29)
-
-
-
-
-
-
-
 
 
 #endif /* REGISTERS_H_ */

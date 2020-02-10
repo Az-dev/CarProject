@@ -20,3 +20,7 @@ SwICU.c
 
 timers.c
 
+Usart\usart.c
+
+Usart\usart_Cfg.c
+
