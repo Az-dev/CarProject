@@ -13,56 +13,68 @@ extern volatile uint8_t * c;
 */
 void Usart_Init(void)
 {
-   /*----------------- initializing (UCSRA) -----------------*/
-   UCSRA &= ~(0x1C); /* Check that FE & DOR & PE is set to zero*/
-   UCSRC |= (usart_init_config.usart_mode_sel|usart_init_config.stop_bit_sel|usart_init_config.reg_sel_mode);
+   /*----------------- initializing (UCSRA) -----------------*/   
+   UCSRC |= (usart_init_config.usart_mode_sel|usart_init_config.stop_bit_sel|usart_init_config.reg_sel_mode|0x05); /*0x05 becuase we want UCSZ0:1 to be set to 1 1 ---> in order to obtain 8-bit width character*/
+   //UCSRC |= 0x85; /*works fine*/
    /*----------------- initializing (UCSRA) -----------------*/
    UCSRB |= (usart_init_config.interrupt_mode_sel|usart_init_config.usart_dir_sel);
    /*----------------- initializing (UCSRA) -----------------*/
+   UCSRA &= ~(0x1C); /* Check that FE & DOR & PE is set to zero*/
    UCSRA |= (usart_init_config.double_speed_select);
    /*------------------ initialize baude rate ---------------*/
    UBRRL = BAUDE_RATE;
    /*------------------ Character size select  ---------------*/
    /*---- setting it to 8-bit -----*/
-   UCSRC |= 0x05;
-   UCSRB &= ~(0x04);
-   /*----- reset RXB8 and TXB8 ----*/
+   //UCSRC |= 0x05;
+   UCSRB &= ~(0x04); /* ----> check this if it will work or not */
+   /*----- clear RXB8 and TXB8 ----*/
    UCSRB &= ~(0x03);
 }
 
 /*
-*  Description : Read character from UDR.
+*  Description : Read a character from RXB.
 *
 *  @param void
 *  @return uint8_t
 */
-void UsartRx(void)
+uint8_t UsartReadRx(void)
 {
-   //*c = (uint8_t)UDR;
-   *c = UDR;
-   //gpioPortWrite(GPIOB, UDR);
+   return UDR;
 }
 
 /*
-*  Description : Write character to UDR
+*  Description : Write a character to TXB
 *
-*  @param uint8_t c
+*  @param uint8_t * c
 *  @return void
 */
-void UsartTx(void)
+void UsartWriteTx(volatile uint8_t * c)
 {
-   UDR = *c;
+   //UDR = *c;
 }
 
-/*------------------------------------- Interrupt handleres  -----------------------------------*/
+/*------------------------------------- Interrupt handlers  -----------------------------------*/
+
+/*
+* Usart on successful character receive completion interrupt handler 
+*/
 ISR_USART_RX()
 {
-   //UCSRA &= ~(0x1C); /* Check that FE & DOR & PE is set to zero*/
-   UsartRx();
+   /*
+   * on successful character reception ..> write the new character
+   */
+   //UsartWriteTx(&c);
+   return 0;   
 }
 
+/*
+* Usart on successful character transmit completion interrupt handler
+*/
 ISR_USART_TX()
 {
-   //UCSRA &= ~(0x1C); /* Check that FE & DOR & PE is set to zero*/
-   UsartTx();
+   /*
+   * on successful character transmission ..> read the new character 
+   */
+   //*c = (volatile uint8_t)UsartReadRx();
+   return 0;   
 }

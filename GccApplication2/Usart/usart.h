@@ -17,21 +17,19 @@
 void Usart_Init(void);
 
 /*
-*  Description : Read character from UDR.
+*  Description : Read a character from RXB.
 *
 *  @param void
 *  @return uint8_t
 */
-void UsartTx(void);
-
+uint8_t UsartReadRx(void);
 
 /*
-*  Description : Write character to UDR
+*  Description : Write a character to TXB
 *
-*  @param uint8_t c
+*  @param uint8_t * c
 *  @return void
 */
-void UsartRx(void);
-
+void UsartWriteTx(volatile uint8_t * c);
 
 #endif /* END OF __USART_H__ */

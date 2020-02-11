@@ -9,7 +9,7 @@
 /*====================================
 * ======== (UCSRC) CONFIG ENUMS ====== 
 *=====================================*/
-/* Select mode enum : whether Asynchronous or Synhronous */
+/* Select mode enum : whether Asynchronous or Synchronous */
 typedef enum sel_mode
 {
     ASYNCH_MODE = 0X00,
@@ -32,7 +32,7 @@ typedef enum sel_stop_bit
    STOP_2_BIT = 0X08
 }Sel_stop_bit_t;
 
-/* Reagister select enum : select whether (UCSRC) or (UBRRH) */
+/* Register select enum : select whether (UCSRC) or (UBRRH) */
 typedef enum reg_sel
 {
    UBRRH_SEL = 0X00,
@@ -48,10 +48,10 @@ typedef enum interrupt_mode
    RECIEVE_COMPLETE_EN = 0X80,
    TRANSMIT_COMPLETE_EN = 0X40,
    DATA_REGISTER_EMPTY_EN = 0X20,
-   INTERRUPT_DIS = 0x00
+   INTERRUPT_DIS = 0x10
 }Interrupt_mode_t;
 
-/* Transmit complet interrupt enable enum */
+/* Transmit complete interrupt enable enum */
 typedef enum usart_dir
 {
    RECIEVE_EN = 0X10,
