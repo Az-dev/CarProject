@@ -1068,10 +1068,10 @@ void Usart_Init(void)
  678:	30 e0       	ldi	r19, 0x00	; 0
  67a:	f9 01       	movw	r30, r18
  67c:	30 81       	ld	r19, Z
- 67e:	40 91 60 00 	lds	r20, 0x0060	; 0x800060 <__DATA_REGION_ORIGIN__>
- 682:	20 91 62 00 	lds	r18, 0x0062	; 0x800062 <__DATA_REGION_ORIGIN__+0x2>
+ 67e:	40 91 60 00 	lds	r20, 0x0060	; 0x800060 <__data_start>
+ 682:	20 91 62 00 	lds	r18, 0x0062	; 0x800062 <__data_start+0x2>
  686:	42 2b       	or	r20, r18
- 688:	20 91 63 00 	lds	r18, 0x0063	; 0x800063 <__DATA_REGION_ORIGIN__+0x3>
+ 688:	20 91 63 00 	lds	r18, 0x0063	; 0x800063 <__data_start+0x3>
  68c:	24 2b       	or	r18, r20
  68e:	23 2b       	or	r18, r19
  690:	26 60       	ori	r18, 0x06	; 6
@@ -1087,9 +1087,9 @@ void Usart_Init(void)
  69e:	f9 01       	movw	r30, r18
  6a0:	20 81       	ld	r18, Z
  6a2:	32 2f       	mov	r19, r18
- 6a4:	20 91 64 00 	lds	r18, 0x0064	; 0x800064 <__DATA_REGION_ORIGIN__+0x4>
+ 6a4:	20 91 64 00 	lds	r18, 0x0064	; 0x800064 <__data_start+0x4>
  6a8:	42 2f       	mov	r20, r18
- 6aa:	20 91 65 00 	lds	r18, 0x0065	; 0x800065 <__DATA_REGION_ORIGIN__+0x5>
+ 6aa:	20 91 65 00 	lds	r18, 0x0065	; 0x800065 <__data_start+0x5>
  6ae:	28 7f       	andi	r18, 0xF8	; 248
  6b0:	24 2b       	or	r18, r20
  6b2:	23 2b       	or	r18, r19
@@ -1106,7 +1106,7 @@ void Usart_Init(void)
  6c0:	f9 01       	movw	r30, r18
  6c2:	20 81       	ld	r18, Z
  6c4:	32 2f       	mov	r19, r18
- 6c6:	20 91 66 00 	lds	r18, 0x0066	; 0x800066 <__DATA_REGION_ORIGIN__+0x6>
+ 6c6:	20 91 66 00 	lds	r18, 0x0066	; 0x800066 <__data_start+0x6>
  6ca:	23 7e       	andi	r18, 0xE3	; 227
  6cc:	23 2b       	or	r18, r19
  6ce:	fc 01       	movw	r30, r24
