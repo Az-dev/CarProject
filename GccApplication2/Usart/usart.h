@@ -6,10 +6,10 @@
 #include "usart_Cfg.h"
 #include "../std_types.h"
 /*---------------------------------------- #defines -----------------------------------------*/
-#define BAUDE_RATE 103 /* this value generates baude rate of 9600 at fosc = 16MHz */
+#define BAUDE_RATE 103 /* this value generates baude rate of 9600 at Fosc = 16MHz */
 
 /*
-*  Description : Intializes USART.
+*  Description : Initializes USART.
 *
 *  @param void
 *  @return void
@@ -27,9 +27,9 @@ uint8_t UsartReadRx(void);
 /*
 *  Description : Write a character to TXB
 *
-*  @param uint8_t * c
+*  @param uint8_t  ch
 *  @return void
 */
-void UsartWriteTx(volatile uint8_t * c);
+void UsartWriteTx(uint8_t ch);
 
 #endif /* END OF __USART_H__ */

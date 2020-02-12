@@ -21,7 +21,7 @@
 volatile uint8_t gu_distance_read = LOW;
 volatile uint8_t gu_sw_icu = 0;
 
-uint8_t test_c;
+uint8_t test_c = 0;
 volatile uint8_t * c = &test_c;
 
 
@@ -35,6 +35,9 @@ void swIcuDistanceMeasurement(void);
 void carObtsacleDetection(void);
 void usartTest(void);
 void myUsartAsRecieverPollingTest(void);
+void myUsartAsTransmitterPollingTest(void);
+void myUsartAsFullDuplexPollingTest(void);
+void myUsartFullDuplexInterruptTest(void);
 
 
 int main(void)
@@ -47,58 +50,78 @@ int main(void)
    //car();   
    //swIcuDistanceMeasurement();
    //carObtsacleDetection();   
-   //usartTest();
-   myUsartAsRecieverPollingTest();   
-
+   //myUsartAsRecieverPollingTest();
+   //myUsartAsTransmitterPollingTest();
+   //myUsartAsFullDuplexPollingTest();
+   //myUsartFullDuplexInterruptTest();
+    
 }
+
+void myUsartFullDuplexInterruptTest(void)
+{
+   Usart_Init();
+   gpioPortDirection(GPIOB,OUTPUT);
+   gpioPortWrite(GPIOB,0x00);
+   //*c = 10;  
+   while(1)
+   { 
+      *c = UsartReadRx();
+      softwareDelayMs(500);   
+      gpioPortWrite(GPIOB,((*c)-'0')<<4);
+      softwareDelayMs(1000);
+   }
+   
+}
+
+void myUsartAsFullDuplexPollingTest(void)
+{
+   uint8_t u8_udr = 0;
+   Usart_Init();
+   gpioPortDirection(GPIOB,OUTPUT);
+   gpioPortWrite(GPIOB,0x00);
+   
+   while(1)
+   {
+      //UDR = 0;
+      while (!(UCSRA & (0x80))) ; /* check previous successful reception*/
+      /* print what is read in gpio */
+      u8_udr = UsartReadRx();
+      gpioPortWrite(GPIOB,(u8_udr-'0')<<4);      
+      while (!(UCSRA & (0x20))) ; /* check UDR is empty through URDE flag */
+      /* print what is read in gpio */
+      UsartWriteTx((u8_udr+'0'));      
+      softwareDelayMs(500);
+      gpioPortWrite(GPIOB,0x00);
+   }
+   
+}
+
+void myUsartAsTransmitterPollingTest(void)
+{
+   Usart_Init();
+   while(1)
+   {
+      while (!(UCSRA & (0x20))) ; /* check UDR is empty through URDE flag */
+      /* print what is read in gpio */
+      UsartWriteTx('5');
+      softwareDelayMs(1000);      
+   }   
+}
+
 void myUsartAsRecieverPollingTest(void)
 {
    Usart_Init();
    gpioPortDirection(GPIOB,OUTPUT);
-   gpioPortWrite(GPIOB,0x00);    
-   //UBRRH = 0x00;  
+   gpioPortWrite(GPIOB,0x00);     
    while(1)
-   {
-       
+   {       
        while (!(UCSRA & (0x80))) ; /* check previous successful reception*/              
-       /*print what is read in gpio */      
+       /* print what is read in gpio */      
        gpioPortWrite(GPIOB,(UsartReadRx()-'0')<<4); 
-       softwareDelayMs(1000);      
-       /* reset RX */
-       //UCSRA |= (0x80);       
+       softwareDelayMs(500);         
        gpioPortWrite(GPIOB,0x00);
-   }
-        
-        
+   }        
 }
-
-void usartTest()
-{
-   //sei();   
-   Usart_Init();
-   gpioPortDirection(GPIOB,HIGH);   
-   while (1)
-   {      
-      if(UCSRA | ~(0x40)) /* check previous successful transmission or UDR is empty */ 
-      {  
-         UsartWriteTx(c);
-         //reset flag
-         UCSRA |= (0x40);
-         //delay
-         softwareDelayMs(500);         
-      } 
-      if(UCSRA | ~(0x80)) /* check previous successful reception*/
-      {
-         /*print what is read in gpio */
-         *c = UsartReadRx();
-         gpioPortWrite(GPIOB,((*c)-'0')<<4);
-         softwareDelayMs(500);
-      }       
-       
-           
-   }
-}
-
 
 void swIcuDistanceMeasurement()
 {

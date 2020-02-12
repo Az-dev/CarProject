@@ -13,11 +13,12 @@ extern volatile uint8_t * c;
 */
 void Usart_Init(void)
 {
-   /*----------------- initializing (UCSRA) -----------------*/   
+   /*----------------- initializing (UCSRC) -----------------*/   
    UCSRC |= (usart_init_config.usart_mode_sel|usart_init_config.stop_bit_sel|usart_init_config.reg_sel_mode|0x05); /*0x05 becuase we want UCSZ0:1 to be set to 1 1 ---> in order to obtain 8-bit width character*/
    //UCSRC |= 0x85; /*works fine*/
-   /*----------------- initializing (UCSRA) -----------------*/
-   UCSRB |= (usart_init_config.interrupt_mode_sel|usart_init_config.usart_dir_sel);
+   /*----------------- initializing (UCSRB) -----------------*/
+   //UCSRB |= (usart_init_config.interrupt_mode_sel|usart_init_config.usart_dir_sel);
+   UCSRB  |= 0xB8;
    /*----------------- initializing (UCSRA) -----------------*/
    UCSRA &= ~(0x1C); /* Check that FE & DOR & PE is set to zero*/
    UCSRA |= (usart_init_config.double_speed_select);
@@ -26,7 +27,7 @@ void Usart_Init(void)
    /*------------------ Character size select  ---------------*/
    /*---- setting it to 8-bit -----*/
    //UCSRC |= 0x05;
-   UCSRB &= ~(0x04); /* ----> check this if it will work or not */
+   //UCSRB &= ~(0x04); /* ----> check this if it will work or not */
    /*----- clear RXB8 and TXB8 ----*/
    UCSRB &= ~(0x03);
 }
@@ -45,12 +46,12 @@ uint8_t UsartReadRx(void)
 /*
 *  Description : Write a character to TXB
 *
-*  @param uint8_t * c
+*  @param uint8_t ch
 *  @return void
 */
-void UsartWriteTx(volatile uint8_t * c)
+void UsartWriteTx(uint8_t ch)
 {
-   //UDR = *c;
+   UDR = ch;
 }
 
 /*------------------------------------- Interrupt handlers  -----------------------------------*/
@@ -62,19 +63,18 @@ ISR_USART_RX()
 {
    /*
    * on successful character reception ..> write the new character
-   */
-   //UsartWriteTx(&c);
-   return 0;   
+   */   
+   //UsartReadRx();
+    *c = UDR;       
 }
 
 /*
-* Usart on successful character transmit completion interrupt handler
+* Usart when data register is empty
 */
-ISR_USART_TX()
+ISR_USART_UDRE()
 {
    /*
-   * on successful character transmission ..> read the new character 
+   * when data register is empty ..> read the new character 
    */
-   //*c = (volatile uint8_t)UsartReadRx();
-   return 0;   
+   UDR = (*c);         
 }
