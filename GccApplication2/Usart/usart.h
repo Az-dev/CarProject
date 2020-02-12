@@ -32,4 +32,21 @@ uint8_t UsartReadRx(void);
 */
 void UsartWriteTx(uint8_t ch);
 
+/*
+*  Description : Read a character from RXB.
+*
+*  @param void
+*  @return uint8_t
+*/
+uint8_t UsartReadRxPolling(void);
+
+
+/*
+*  Description : Write a character to TXB
+*
+*  @param uint8_t ch
+*  @return void
+*/
+void UsartWriteTxPolling(uint8_t ch);
+
 #endif /* END OF __USART_H__ */
